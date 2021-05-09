@@ -2,7 +2,6 @@ const { User } = require("../models/user-model")
 const { Role } = require("../models/role-model")
 
 checkDuplicateUsername = async (req, res, next) => {
-    console.log("checking for duplicate username")
     try{ 
         const user = await User.findOne({username: req.body.username});
         console.log(user)
@@ -16,11 +15,10 @@ checkDuplicateUsername = async (req, res, next) => {
 }
 
 checkRolesExist = async (req, res, next) => {
-    console.log("checking for duplicate roles")
     try {
         const roleToCheck = req.body.role
         const role = await Role.findOne({name: roleToCheck})
-        if(role === undefined) {
+        if(!role) {
             return res.status(400).json({success: false, message: `${roleToCheck} does not exist`})
         }
         next()

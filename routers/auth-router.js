@@ -2,8 +2,8 @@ const { checkDuplicateUsername, checkRolesExist } = require("../middlewares/veri
 const config = require("../config/auth-config");
 const { User } = require("../models/user-model")
 const { Role } = require("../models/role-model")
-var jwt = require("jsonwebtoken");
-var bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
 const express = require("express")
 const router = express()
 
@@ -66,10 +66,10 @@ router.route("/signin")
       if(!passwordIsValid) {
           return res.status(200).json({success: false, message: "Invalid password", auth_token: null})
       }
-      var token = jwt.sign({id: user._id}, config.secret, {
+      const token = jwt.sign({id: user._id}, config.secret, {
           expiresIn: 86400
       })
-      var authorities = role.name.toUpperCase();
+      const authorities = role.name.toUpperCase();
       console.log(`Role ${role.name} has been added`)
       res.status(200).json({
           name: user.name,

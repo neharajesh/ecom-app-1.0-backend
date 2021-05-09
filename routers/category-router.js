@@ -23,6 +23,7 @@ router.route("/")
         const savedCategory = await newCategory.save()
         res.status(200).json({success: true, newCategory: savedCategory})
     } catch (err) {
+        console.log(err.message)
         res.status(404).json({success: false, message: "save product failed", errMessage: err.message})
     }
 })

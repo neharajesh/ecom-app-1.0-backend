@@ -22,7 +22,7 @@ router.route("/")
         const savedWishlist = await newWishlist.save()
         res.status(200).json({success: true, newWishlist: savedWishlist})
     } catch (err) {
-        res.status(404).json({success: false, message: "save wishlist failed", errMessage: err.message})
+        res.status(400).json({success: false, message: "save wishlist failed", errMessage: err.message})
     }
 })
 
@@ -43,7 +43,7 @@ router.route("/:id")
 .get((req, res) => {
     let { wishlist } = req
     wishlist.__v = undefined
-    res.status(200).json({success: false, wishlist})
+    res.status(200).json({success: true, wishlist})
 })
 .post(async(req, res) => {
     let { wishlist } = req
