@@ -21,14 +21,13 @@
   },
   "devDependencies": {},
   "scripts": {
-    "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/neharajesh/ecommerce-application-backend.git"
   },
-  "keywords": [],
+  "keywords": ["node", "heroku"],
   "author": "",
   "license": "ISC",
   "bugs": {
