@@ -1,8 +1,10 @@
 const jwt = require("jsonwebtoken");
-const config = require("../config/auth-config.js");
+// const config = require("../config/auth-config.js");
 
 const { User } = require("../models/user-model")
 const { Role } = require("../models/role-model")
+
+const secret = process.env["JWT_SECRET"]
 
 const verifyToken = (req, res, next) => {
     try {
@@ -10,7 +12,7 @@ const verifyToken = (req, res, next) => {
         if(!token) {
             return res.status(403).json({success: false, message: "no token provided"})
         }
-        jwt.verify(token, config.secret, () => {
+        jwt.verify(token, secret, () => {
             req.userId = decoded.id;
             next()
         })
