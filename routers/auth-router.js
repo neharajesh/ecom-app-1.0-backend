@@ -1,86 +1,51 @@
-const { checkDuplicateUsername, checkRolesExist } = require("../middlewares/verify-signup");
-const config = require("../config/auth-config");
-const { User } = require("../models/user-model")
-const { Role } = require("../models/role-model")
-const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs");
+// For signin/signup
 const express = require("express")
 const router = express()
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
+
+const { User } = require("../models/user-model")
+const { checkExistingUsername } = require("../middlewares/verify-signup")
 
 router.route("/signup")
-.post(async (req, res) => {
-  try {
-    const user = req.body
-    const newUser = new User({ name: user.name, username: user.username, password: bcrypt.hashSync(req.body.password, 8)});
-    const doesUserExist = await User.findOne({username: newUser.username})
-    if(doesUserExist) {
-      console.log("username exists")
-      return res.json({ success: false, message: "Username already in use, try another"})
+.post(checkExistingUsername, async(req, res) => {
+    try {
+        const user = req.body
+        const newUser = new User({username: user.username, password: bcrypt.hashSync(user.password, 8)})
+        const savedUser = await newUser.save()
+        res.json({success: true, message: "User signed up", data: savedUser})
+    } catch (err) {
+        console.log("Error occurred while signing user up")
+        res.json({success: false, message: "Error while signing user up", errMessage: err.message})
     }
-    const savedUser = await newUser.save();
-    if(newUser.role) {
-        const role = await Role.find({name: {$in: newUser.role}}, (err, roles) => {
-            if(err) {
-                return res.status(500).json({success: false, message: "error occurred while finding roles", errMessage: err.message})
-            }
-            newUser.role = role.map(currentRole => currentRole._id)
-            newUser.save();
-            res.status(200).json({success: true, message: "user registered successfully", user: savedUser})
-        })
-    } else {
-        const role = await Role.findOne({name: "buyer"}, (err, role) => {
-            if(err) {
-                return res.status(500).json({success: false, message: "error occurred while adding role", errMessage: err.message})
-            }
-            newUser.role = [role._id];
-            console.log(user.role)
-            newUser.save();
-            res.status(200).json({success: true, message: "user registered successfully", user: savedUser})
-        } )
-    }
-    console.log(savedUser);
-  } catch (err) {
-      console.log("error occurred while signing up")
-  }
 })
-
 
 router.route("/signin")
-.post(async (req, res) => {
-  try {
-      const user = await User.findOne({username: req.body.username})
-      if(!user) {
-          return res.status(200).json({success: false, message: "User not found"})
-      }
+.post(async(req, res) => {
+    try {
+        const user = req.body
 
-      const role = await Role.findOne({_id: user.role})        
-      if(!role) {
-          return res.status(200).json({success: false, message: "Role not found"})
-      }
-      
-      const passwordIsValid = bcrypt.compareSync(
-          req.body.password,
-          user.password
-      );        
+        //fetch user
+        const existingUser = await User.findOne({username: user.username})
+        if(!existingUser) {
+            console.log("User with username does not exist")
+            return res.json({success: false, message: "User with username does not exist", authToken: ""})
+        }
 
-      if(!passwordIsValid) {
-          return res.status(200).json({success: false, message: "Invalid password", auth_token: null})
-      }
-      const token = jwt.sign({id: user._id}, config.secret, {
-          expiresIn: 86400
-      })
-      const authorities = role.name.toUpperCase();
-      console.log(`Role ${role.name} has been added`)
-      res.status(200).json({
-          name: user.name,
-          username: user.username,
-          role: authorities,
-          auth_token: token
-      })
-      console.log(user)
-  } catch (err) {
-      console.log("Error occurred while processing signin", err.message)
-  }
+        //authenticate user
+        const validatePassword = bcrypt.compareSync(user.password, existingUser.password)
+        if(!validatePassword) {
+            console.log("Passwords don't match")
+            return res.json({success: false, message: "Passwords don't match", authToken: ""})
+        }
+
+        //generate a token
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: 86400 })
+        res.json({success: true, message: "User signed in successfully", user: {username: user.username, password: bcrypt.hashSync(user.password, 8)}, authToken: token})
+    } catch (err) {
+        console.log("Error occurred whie signing user in")
+        res.json({success: false, message: "Error occurred while signing in", errMessage: err.message})
+    }
 })
 
-module.exports = router
+module.exports = router;

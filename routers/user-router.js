@@ -1,24 +1,51 @@
-const { authJwt } = require("../middlewares/auth-jwt");
-const controller = require("../controllers/user-controller");
+// For editing user details 
+const express = require("express")
+const router = express()
+const { extend } = require("lodash")
 
-module.exports = function(app) {
-  app.use(function(req, res, next) {
-    res.header(
-      "Access-Control-Allow-Headers",
-      "x-access-token, Origin, Content-Type, Accept"
-    );
-    next();
-  });
+const { User } = require("../models/user-model")
 
-  app.get("/", controller.allAccess);
+router.param("userId", async(req, res, next, userId) => {
+    try {
+        const user = await User.findById(userId);
+        if(!user) {
+            console.log("This user does not exist, userId =>", userId)
+            return res.json({success: false, message: "User could not be found", data: []})
+        }
+        req.user = user
+        next()
+    } catch (err) {
+        console.log("Error occurred while trying to fetch user details")
+        res.json({success: false, message: "Error while fetching user details", errMessage: err.message})
+    }
+})
 
-  app.get("/buyer", [authJwt.verifyToken], controller.buyerBoard);
+router.route("/:userId")
+.get((req, res) => {
+    let { user } = req
+    res.json({success: true, message: "User details fetched successfully", data: user})
+})
+.post(async(req, res) => {
+    try {
+        let { user } = req
+        let userUpdates = req.body
+        user = extend(user, userUpdates)
+        user = await user.save()
+        res.json({success: true, message: "User details updated successfully", data: user})
+    } catch (err) {
+        console.log("Error occurred while trying to update user details")
+        res.json({success: false, message: "Error updating user details", errMessage: err.message})
+    }
+})
+.delete(async(req, res) => {
+    try {
+        let { user } = req
+        await user.remove()
+        res.json({success: true, message: "User successfully deleted", data: user})
+    } catch (err) {
+        console.log("Error occurred while deleteing user")
+        res.json({success: false, message: "User could not be deleted", errMessage: err.message})
+    }
+})
 
-  app.get("/seller", [authJwt.verifyToken], controller.sellerBoard)
-
-  app.get(
-    "/admin",
-    [authJwt.verifyToken, authJwt.isAdmin],
-    controller.adminBoard
-  );
-};
+module.exports = router;
