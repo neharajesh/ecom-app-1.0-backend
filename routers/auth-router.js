@@ -5,10 +5,9 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 
 const { User } = require("../models/user-model")
-const { checkExistingUsername } = require("../middlewares/verify-signup")
+const { checkDuplicateUsername } = require("../middlewares/verify-signup")
 
-router.route("/signup")
-.post(checkExistingUsername, async(req, res) => {
+router.post("/signup", checkDuplicateUsername, async(req, res) => {
     try {
         const user = req.body
         const newUser = new User({username: user.username, password: bcrypt.hashSync(user.password, 8)})
