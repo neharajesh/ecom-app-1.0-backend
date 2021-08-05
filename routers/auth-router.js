@@ -10,7 +10,7 @@ const { checkDuplicateUsername } = require("../middlewares/verify-signup")
 router.post("/signup", checkDuplicateUsername, async(req, res) => {
     try {
         const user = req.body
-        const newUser = new User({username: user.username, password: bcrypt.hashSync(user.password, 8)})
+        const newUser = new User({...user, password: bcrypt.hashSync(user.password, 8)})
         const savedUser = await newUser.save()
         res.json({success: true, message: "User signed up", data: savedUser})
     } catch (err) {
@@ -40,7 +40,7 @@ router.route("/signin")
 
         //generate a token
         const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: 86400 })
-        res.json({success: true, message: "User signed in successfully", user: {username: user.username, password: bcrypt.hashSync(user.password, 8)}, authToken: token})
+        res.json({success: true, message: "User signed in successfully", user: existingUser, authToken: token})
     } catch (err) {
         console.log("Error occurred whie signing user in")
         res.json({success: false, message: "Error occurred while signing in", errMessage: err.message})

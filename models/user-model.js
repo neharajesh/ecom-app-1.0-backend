@@ -18,9 +18,6 @@ const UserSchema = new Schema({
     role: {
         type: mongoose.Types.ObjectId,
         ref: "Role"
-    },
-    auth_token: {
-        type: String
     }
 })
 

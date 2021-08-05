@@ -17,6 +17,8 @@ const categoryRouter = require("./routers/category-router")
 const offersRouter = require("./routers/offers-router")
 const wishlistRouter = require("./routers/wishlist-router")
 const authRouter = require("./routers/auth-router");
+const addressRouter = require("./routers/address-router")
+const userRouter = require("./routers/user-router")
 // const { authJwt } = require("./middlewares/auth-jwt");
 
 app.all('/*', function(req, res, next) {
@@ -31,6 +33,8 @@ app.use("/offers", offersRouter);
 app.use("/cart", cartRouter);
 app.use("/wishlist", wishlistRouter);
 app.use("/auth", authRouter);
+app.use("/address", addressRouter)
+app.use("/users", userRouter)
 
 app.get("/", (req, res) => {
   res.send("Home page")
